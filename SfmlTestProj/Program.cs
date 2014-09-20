@@ -27,7 +27,7 @@ namespace Jaunt
         public static List<Player> connectedPlayers = new List<Player>() { }; //List for the connected players
         public static List<String> chatMessages = new List<String>() { };
         public static Player clientPlayer;// = new Player(100, 100, -1); //Create the client's player
-        public static Sprite playerSprite, standing, moving, background, playerSpriteDead, run2, jump;
+        public static Sprite background, playerWalk, playerIdle;
         public static Texture backgroundTexture;
 
         public static SoundBuffer click, SaD, fart, crunch;
@@ -85,19 +85,17 @@ namespace Jaunt
             camera2D = new View(cameraPos, new Vector2f(640, 480));
 
 
-            Texture currTex = new Texture("Content/player.png");
+            Texture currTex = new Texture("Content/walkAnim.png");
             currTex.Smooth = false;
-            playerSprite = new Sprite(currTex);
+            playerWalk = new Sprite(currTex);
 
-            currTex = new Texture("Content/run.png");
+            currTex = new Texture("Content/walkAnim.png");
             currTex.Smooth = false;
-            run2 = new Sprite(currTex);
+            playerIdle = new Sprite(currTex);
 
-            standing = new Sprite(new Texture("Content/player.png"));
-            playerSpriteDead = new Sprite(new Texture("Content/dead.png"));
-            moving = new Sprite(new Texture("Content/player.png"));
+           
             background = new Sprite(new Texture("Content/background.png"));
-            jump = new Sprite(new Texture("Content/jump.png"));
+            
             backgroundTexture = new Texture("Content/background.png");
 
 
@@ -145,6 +143,7 @@ namespace Jaunt
         {
             cameraPos = new Vector2f((int)clientPlayer.position.X, (int)clientPlayer.position.Y);
             camera2D = new View(cameraPos, new Vector2f(640, 480));
+            camera2D.Zoom(.5f);
             View noCamera = new View(new Vector2f(0, 0), new Vector2f(640, 480));
 
             window.SetView(camera2D);

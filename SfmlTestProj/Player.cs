@@ -32,7 +32,11 @@ namespace Jaunt
         public int groundTimer = 0;
 
         public long UID;
-        float speed = 2;
+
+        public int moveFrames = 2;
+        public int idleFrames = 3;
+        public int currentMaxFrames = 0;
+
 
         public string textCapture = "";
 
@@ -59,7 +63,7 @@ namespace Jaunt
             color = new Color((byte)Game.r.Next(255), (byte)Game.r.Next(255), (byte)Game.r.Next(255));
             previousTime = DateTime.Now;
 
-            sprite = Game.playerSprite;
+            sprite = Game.playerWalk;
 
         }
 
@@ -128,14 +132,14 @@ namespace Jaunt
 
         public void updateConnectedPlayer()
         {
-            double secsBetweenIntervals = .1 * 4 / 30;
+            double secsBetweenIntervals = .1;
             TimeSpan difference = (DateTime.Now - previousTime);
             if (difference.TotalSeconds >= secsBetweenIntervals)
             {
                 previousTime += TimeSpan.FromSeconds(secsBetweenIntervals);
                 frame++;
             }
-            if (frame > 30)
+            if (frame > 3)
                 frame = 0;
         }
 
@@ -166,7 +170,9 @@ namespace Jaunt
                 }
             }
 
-            double secsBetweenIntervals = .1 * 4 / 30;
+
+
+            double secsBetweenIntervals = .2;
             TimeSpan difference = (DateTime.Now - previousTime);
             if (difference.TotalSeconds >= secsBetweenIntervals)
             {
@@ -176,7 +182,7 @@ namespace Jaunt
                 if (frame % 2 == 0)
                     sendPos();
             }
-            if (frame > 30)
+            if (frame >= currentMaxFrames)
                 frame = 0;
 
 
@@ -186,94 +192,39 @@ namespace Jaunt
 
         public void moveClient() //Client Player Only
         {
-            onGround = false;
             bool moveX = true;
             bool moveY = true;
 
-            if (position.X < 0 || (position.X + Game.playerSprite.TextureRect.Width > Game.background.Texture.Size.X) ||
-                position.Y < 0 || (position.Y + Game.playerSprite.TextureRect.Height > Game.background.Texture.Size.Y))
+            Vector2f xCheck = new Vector2f(position.X + velocity.X, position.Y + Game.playerWalk.Texture.Size.Y);
+            Vector2f yCheck = new Vector2f(position.X, position.Y + Game.playerWalk.Texture.Size.Y + velocity.Y);
+
+            if (Game.map.GetPixel((uint)xCheck.X, (uint)xCheck.Y).Equals(Color.Black))
             {
-                position = new Vector2f(100, 25); //Out of bounds, reset player
-                velocity = new Vector2f(0, 0);
-                fallDistance = 0;
+                moveX = false;
             }
-            try
+            if (Game.map.GetPixel((uint)yCheck.X, (uint)yCheck.Y).Equals(Color.Black))
             {
-                if (Game.map.GetPixel(
-                    (uint)position.X + (uint)velocity.X,
-                    (uint)position.Y).Equals(Color.Black))
-                    moveX = false;
-
-                if (Game.map.GetPixel(
-                    (uint)position.X + (uint)velocity.X,
-                    (uint)position.Y + (uint)Game.playerSprite.TextureRect.Height).Equals(Color.Black)) //bottom left
-                    moveX = false;
-
-                if (Game.map.GetPixel((uint)position.X + (uint)Game.playerSprite.TextureRect.Width + (uint)velocity.X, (uint)position.Y + (uint)Game.playerSprite.TextureRect.Height).Equals(Color.Black)) //bottom right
-                    moveX = false;
-                if (Game.map.GetPixel((uint)position.X + (uint)Game.playerSprite.TextureRect.Width + (uint)velocity.X, (uint)position.Y).Equals(Color.Black)) //top right
-                    moveX = false;
-
-                if (Game.map.GetPixel((uint)position.X, (uint)position.Y + (uint)velocity.Y).Equals(Color.Black)) //top left
-                {
-                    moveY = false;
-                }
-                if (Game.map.GetPixel((uint)position.X, (uint)position.Y + (uint)Game.playerSprite.TextureRect.Height + (uint)velocity.Y).Equals(Color.Black)) //bottom left
-                    moveY = false;
-                if (Game.map.GetPixel((uint)position.X + (uint)Game.playerSprite.TextureRect.Width, (uint)position.Y + (uint)velocity.Y + (uint)Game.playerSprite.TextureRect.Height).Equals(Color.Black)) //bottom right
-                    moveY = false;
-                if (Game.map.GetPixel((uint)position.X + (uint)Game.playerSprite.TextureRect.Width, (uint)position.Y + (uint)velocity.Y).Equals(Color.Black)) //top right
-                    moveY = false;
-                if (Game.map.GetPixel((uint)position.X + (uint)Game.playerSprite.TextureRect.Width / 2, (uint)position.Y + (uint)Game.playerSprite.TextureRect.Height + 2).Equals(Color.White))
-                {
-                    velocity.Y = 0;
-                    if (Keyboard.IsKeyPressed(Keyboard.Key.Up))
-                        velocity.Y = -3f;
-                    if (Keyboard.IsKeyPressed(Keyboard.Key.Down))
-                        velocity.Y = 3f;
-                    fallDistance = 0;
-                }
-
-                if (moveX)
-                    this.position.X += velocity.X;
-                else //against a wall
-                {
-                }
-                if (moveY)
-                {
-                    groundTimer = 0;
-                    this.position.Y += velocity.Y;
-
-                    if (velocity.Y > 10)
-                        fallDistance++;
-                    else
-                        fallDistance = 0;
-                    if (fallDistance == maxFall)
-                    {
-                        //SoundPlayer.playSound(Game.SaD);
-                    }
-                }
-                else //on the ground or ceiling
-                {
-                    onGround = true;
-                    groundTimer++;
-                    if (fallDistance > maxFall)
-                    {
-                        alive = false;
-                        Game.soundInstances.Add(new SoundInstance(Game.crunch, 0f, 0f));
-
-                    }
-                    fallDistance = 0;
-                    velocity.Y = 0;
-                }
-
-
+                moveY = false;
             }
-            catch (Exception)
+
+            //RectangleShape rect = new RectangleShape(new Vector2f(1, 1));
+            //rect.FillColor = Color.Red;
+            //rect.Position = new Vector2f(xCheck.X, yCheck.Y);
+            //    Game.window.Draw(rect);
+
+            if (moveX)
             {
-                position = new Vector2f(100, 25); //Out of bounds, reset player
-                velocity = new Vector2f(0, 0);
+                currentMaxFrames = moveFrames;
+                position.X += velocity.X;
             }
+            if (moveY)
+            {
+                currentMaxFrames = moveFrames;
+                position.Y += velocity.Y;
+            }
+            velocity = new Vector2f(0, 0);
+
+
         }
 
         public void checkControls()
@@ -287,42 +238,33 @@ namespace Jaunt
                     alive = true;
                     sendAliveStatus();
                 }
-
             }
 
             if (alive)
             {
-                velocity.X = 0;
-                velocity.Y = 0;
-
-                if (Keyboard.IsKeyPressed(Keyboard.Key.Right))
-                    if (velocity.X < 4)
-                        velocity.X += 4;
                 if (Keyboard.IsKeyPressed(Keyboard.Key.Left))
-                    if (velocity.X > -4)
-                        velocity.X += -4;
+                {
+                    velocity.X = -2f;
+                }
+                if (Keyboard.IsKeyPressed(Keyboard.Key.Right))
+                {
+                    velocity.X = 2f;
+                }
                 if (Keyboard.IsKeyPressed(Keyboard.Key.Up))
-                    if (velocity.Y > -4)
-                        velocity.Y += -4;
+                {
+                    velocity.Y = -2f;
+                }
                 if (Keyboard.IsKeyPressed(Keyboard.Key.Down))
-                    if (velocity.Y < 4)
-                        velocity.Y += 4;
-
-
+                {
+                    velocity.Y = 2f;
+                }
             }
             else
             {
-                velocity.X = 0;
-                velocity.Y = 0;
+
             }
 
-            //if (velocity.Y < 18)
-            //    velocity.Y += 1f;
 
-            if (velocity.X > 0)
-                velocity.X--;
-            if (velocity.X < 0)
-                velocity.X++;
 
         }
 
@@ -346,30 +288,14 @@ namespace Jaunt
                 //Main.spriteBatch.DrawString(Main.font1, overheadMessage, new Vector2f(position.X + Main.playerSprite.Width / 2 - (Main.font1.MeasureString(overheadMessage).X / 2), position.Y - 20), Color.White);
             }
 
-            if (Math.Abs(velocity.X) > .5f)
-                animType = "move";
-            else
-                animType = "idle";
+
 
             if (alive)
             {
-                if (groundTimer > 3)
-                {
-
-                    if (animType == "move")
-                        Render.drawAnimation(Game.run2, position - new Vector2f(0, -2), Color.Black, new Vector2f(Game.run2.Texture.Size.X / 2 / 30, 0), facing, 30, 1, frame, 1);
-                    if (animType == "idle")
-                        Render.draw(Game.playerSprite, this.position - new Vector2f(0, -2), Color.Black, new Vector2f(Game.playerSprite.TextureRect.Width / 2, 0), facing);
-                }
-                else
-                {
-                    Render.draw(Game.jump, this.position - new Vector2f(0, -2), Color.Black, new Vector2f(Game.jump.TextureRect.Width / 2, 0), facing);
-
-                }
+                Render.drawAnimation(Game.playerWalk, this.position, Color.White, new Vector2f((int)(Game.playerWalk.Texture.Size.X / moveFrames / 2), 0), facing, moveFrames, 1, frame, 1);
             }
             else
             {
-                Render.draw(Game.playerSpriteDead, this.position - new Vector2f(12, -2), Color.Black, new Vector2f(Game.playerSpriteDead.TextureRect.Width / 2, 0), facing);
 
             }
 
@@ -382,15 +308,6 @@ namespace Jaunt
                 Render.drawString(Game.font, Game.clientPlayer.username, position - new Vector2f(0, 15), Color.Black, .4f, true);
             }
 
-            //if (animType.Equals("move"))
-            //  Animation.drawAnimatedSpriteNonRef(Main.moving, 4, 3, position, facing, Color.White, 1f, frame, 0f, 0);
-            //if (animType.Equals("idle"))
-            //  Main.spriteBatch.Draw(Main.standing, position, null, Color.White, 0f, Vector2.Zero, 1f, facing == 1 ? SpriteEffects.None : SpriteEffects.FlipHorizontally, 0); //Draw the client's player
-
-            //if (Main.clientPlayer.username.Equals(""))
-            //  Main.spriteBatch.DrawString(Main.font1, "CLIENT", Main.clientPlayer.position + new Vector2(20, 0), Color.White);
-            //else
-            //  Main.spriteBatch.DrawString(Main.font1, Main.clientPlayer.username, Main.clientPlayer.position + new Vector2(20, 0), Color.White);
 
 
             oldPosition = position;
@@ -401,20 +318,7 @@ namespace Jaunt
         {
 
             onGround = false;
-            if (position.X < 0 || (position.X + Game.playerSprite.TextureRect.Width > Game.background.Texture.Size.X) ||
-               position.Y < 0 || (position.Y + Game.playerSprite.TextureRect.Height > Game.background.Texture.Size.Y))
-            {
-            }
-            else
-            {
 
-                if (Game.map.GetPixel((uint)(position.X + Game.playerSprite.TextureRect.Width / 2), (uint)(position.Y + Game.playerSprite.TextureRect.Height + velocity.Y)).Equals(Color.Black))
-                {
-                    onGround = true;
-                }
-
-
-            }
 
 
             ohmDecay--;
@@ -460,24 +364,10 @@ namespace Jaunt
 
             if (alive)
             {
-                if (animType == "move")
-                    Render.drawAnimation(Game.run2, position - new Vector2f(0, -2), connectColor, new Vector2f(Game.run2.Texture.Size.X / 2 / 30, 0), facing, 30, 1, frame, 1);
-                if (animType == "idle")
-                    Render.draw(Game.playerSprite, this.position - new Vector2f(0, -2), connectColor, new Vector2f(Game.playerSprite.TextureRect.Width / 2, 0), facing);
             }
             else
             {
-                Render.draw(Game.playerSpriteDead, this.position - new Vector2f(12, -2), connectColor, new Vector2f(Game.playerSpriteDead.TextureRect.Width / 2, 0), facing);
 
-            }
-
-            if (animType.Equals("move"))
-            {
-                //Animation.drawAnimatedSpriteNonRef(Main.moving, 4, 3, position, facing, Color.White, 1f, frame, 0f, 0);
-            }
-            if (animType.Equals("idle"))
-            {
-                //Main.spriteBatch.Draw(Main.standing, position, null, Color.White, 0f, new Vector2f(0,0), 1f, facing == 1 ? SpriteEffects.None : SpriteEffects.FlipHorizontally, 0); //Draw the client's player
             }
 
             oldPosition = position;
