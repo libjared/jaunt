@@ -11,108 +11,75 @@ using Lidgren.Network;
 
 namespace Jaunt
 {
-    class Game
+    static class Game
     {
         public static RenderWindow window;
-        static DateTime startTime;
-        static Vector2f windowSize;
+		public static DateTime startTime;
+		//public static DateTime previousTime; //TODO remove??
+        public static Vector2f windowSize;
         public static Random r = new Random();
-        public static View camera2D;
-        public static Font font;
         public static List<SoundInstance> soundInstances = new List<SoundInstance>();
+		public static Content content;
 
         public static float ping;
 
         public static NetClient client;
-        public static List<Player> connectedPlayers = new List<Player>(); //List for the connected players
+        public static List<Player> connectedPlayers = new List<Player>();
         public static List<String> chatMessages = new List<String>();
-        public static Player clientPlayer;// = new Player(100, 100, -1); //Create the client's player
-        public static Sprite background, playerWalk, playerIdle;
-        public static Texture backgroundTexture;
+        public static Player clientPlayer;
+        //public static Sprite background, playerWalk, playerIdle;
 
-        public static SoundBuffer click, SaD, fart, crunch;
-        public static bool connected = false;
+        //public static bool connected = false; //TODO: client has def for this
 
         public static int timer = 0;
-        public static DateTime previousTime = new DateTime();
-        public static Vector2f cameraPos = new Vector2f(0, 0);
 
         public static Image map;
 
         static void Main(string[] args)
         {
-            PreRun();
-
+			LoadContentInitialize();
 
             while (window.IsOpen())
             {
-                UpdateDraw(window);
+                UpdateDraw();
             }
 
         }
 
-        private static void PreRun()
-        {
-            LoadContentInitialize();
-            startTime = DateTime.Now;
-            r = new Random(100);
-            Initialize();
-        }
+		private static void SetupClient ()
+		{
+			NetPeerConfiguration config = new NetPeerConfiguration ("jaunt");
+			config.EnableMessageType (NetIncomingMessageType.ConnectionLatencyUpdated);
+			string ip = "giga.krash.net";
+			//Jared's IP
+			int port = 12345;
+			client = new NetClient (config);
+			client.Start ();
+			client.Connect (ip, port);
+		}
 
-        private static void Initialize()
+		private static void LoadContentInitialize()
         {
-            NetPeerConfiguration config = new NetPeerConfiguration("jaunt");
-            config.EnableMessageType(NetIncomingMessageType.ConnectionLatencyUpdated);
-            string ip = "giga.krash.net"; //Jared's IP
-            int port = 12345;
-            client = new NetClient(config);
-            client.Start();
-            client.Connect(ip, port);
-            map = backgroundTexture.CopyToImage();
+			startTime = DateTime.Now;
+			//previousTime = DateTime.Now; //TODO remove??
 
-            clientPlayer = new Player(100, 100, -1); //Create the client's player
-        }
-
-        private static void LoadContentInitialize()
-        {
             window = new RenderWindow(
                 new VideoMode(800, 600), "Project Title");
 
             windowSize = new Vector2f(800, 600);
             window.SetFramerateLimit(60);
-            window.Closed += (a, b) => { window.Close(); };
-
-            camera2D = new View(cameraPos, new Vector2f(640, 480));
-
-
-            Texture currTex = new Texture("Content/walkAnim.png");
-            currTex.Smooth = false;
-            playerWalk = new Sprite(currTex);
-
-            currTex = new Texture("Content/walkAnim.png");
-            currTex.Smooth = false;
-            playerIdle = new Sprite(currTex);
-
-           
-            background = new Sprite(new Texture("Content/background.png"));
-            
-            backgroundTexture = new Texture("Content/background.png");
-
-
-            font = new Font("Content/Font1.ttf");
-
-            click = new SoundBuffer("Content/click.wav");
-            SaD = new SoundBuffer("Content/SaD.wav");
-            fart = new SoundBuffer("Content/fart.wav");
-            crunch = new SoundBuffer("Content/crunch.wav");
+            window.Closed += (object sender, EventArgs e) =>
+			{
+				window.Close();
+			};
 
             window.TextEntered += (object sender, TextEventArgs e) =>
             {
-
                 if (Keyboard.IsKeyPressed(Keyboard.Key.Back))
                 {
-                    if (clientPlayer.textCapture.Length > 0)
+                    if (clientPlayer.textCapture.Length > 0) {
                         clientPlayer.textCapture = clientPlayer.textCapture.Substring(0, clientPlayer.textCapture.Length - 1);
+					}
                 }
                 else if (Keyboard.IsKeyPressed(Keyboard.Key.Return))
                 {
@@ -125,9 +92,8 @@ namespace Jaunt
                 }
                 else
                 {
-                    clientPlayer.textCapture += e.Unicode;
+                    clientPlayer.textCapture += e.Unicode; //TODO: take out of player
                 }
-
             };
 
             window.Closed += (object sender, EventArgs e) =>
@@ -136,26 +102,26 @@ namespace Jaunt
                 System.Threading.Thread.Sleep(100);
 
             };
-
+			
+			content = new Content("Content/");
         }
 
-        private static void UpdateDraw(RenderWindow window)
+        private static void UpdateDraw()
         {
-            cameraPos = new Vector2f((int)clientPlayer.position.X, (int)clientPlayer.position.Y);
-            camera2D = new View(cameraPos, new Vector2f(640, 480));
-            camera2D.Zoom(.5f);
-            View noCamera = new View(new Vector2f(0, 0), new Vector2f(640, 480));
-
-            window.SetView(camera2D);
+			//set the camera
+			View cameraView = new View (window.DefaultView);
+			cameraView.Center = clientPlayer.position.Floor();
+			cameraView.Zoom(0.5f);
+			window.SetView(cameraView);
 
             UpdateSounds();
 
             window.DispatchEvents();
             window.Clear(new Color(0, 203, 255));
 
-            for (int i = 0; i < connectedPlayers.Count; i++)
+            foreach (Player ply in connectedPlayers)
             {
-                connectedPlayers[i].connectColor = Color.White;
+                ply.connectColor = Color.White;
             }
 
             window.Draw(background);
@@ -171,19 +137,15 @@ namespace Jaunt
             _textConnected.Scale = new Vector2f(chatScale, chatScale);
             _textConnected.Position = new Vector2f(-300, -230);// clientPlayer.position;
 
-
-
             Text _playersConnectedText = new Text(connectedPlayers.Count + " Player Connected", font);
             _playersConnectedText.Scale = new Vector2f(chatScale, chatScale);
             _playersConnectedText.Position = new Vector2f(-300, -220);// clientPlayer.position;
-
-
 
             drawPlayers();
             updatePlayers();
 
 
-            window.SetView(noCamera);
+            window.SetView(window.DefaultView);
             window.Draw(_chatCompose);
             window.Draw(_textConnected);
             window.Draw(_playersConnectedText);
@@ -199,7 +161,7 @@ namespace Jaunt
             {
                 pingColor = Color.Yellow;
             }
-
+			
             Render.drawString(font, ping + " ms", new Vector2f(-300, -240), pingColor, .4f, false);
 
             for (int i = 0; i < chatMessages.Count; i++)
@@ -210,9 +172,6 @@ namespace Jaunt
 
                 window.Draw(chatMessage);
             }
-
-
-
 
             window.Display();
         }
@@ -227,8 +186,9 @@ namespace Jaunt
                     soundInstances[i].started = true;
                 }
 
-                if (soundInstances[i].sound.Status.Equals(SoundStatus.Stopped))
-                    soundInstances.RemoveAt(i);
+				if (soundInstances [i].sound.Status.Equals(SoundStatus.Stopped)) {
+					soundInstances.RemoveAt(i);
+				}
             }
         }
 
@@ -253,11 +213,6 @@ namespace Jaunt
         {
             clientPlayer.updateClient();
             clientPlayer.checkControls();
-            //for (int i = 0; i < connectedPlayers.Count; i++)
-            //{
-            //    connectedPlayers[i].update();
-            //    //Console.WriteLine(connectedPlayers[i].UID);
-            //}
         }
 
         public static void HandleMessages()
