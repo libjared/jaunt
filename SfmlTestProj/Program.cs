@@ -108,26 +108,31 @@ namespace Jaunt
 
         private static void UpdateDraw()
         {
+			/*
+			 * update
+			 */
+			window.DispatchEvents();
+			UpdateSounds();
+			foreach (Player ply in connectedPlayers)
+			{
+				ply.connectColor = Color.White;
+			}
+			HandleMessages();
+			updatePlayers();
+
+			/*
+			 * draw
+			 */
 			//set the camera
 			View cameraView = new View (window.DefaultView);
 			cameraView.Center = clientPlayer.position.Floor();
 			cameraView.Zoom(0.5f);
 			window.SetView(cameraView);
-
-            UpdateSounds();
-
-            window.DispatchEvents();
+            
             window.Clear(new Color(0, 203, 255));
 
-            foreach (Player ply in connectedPlayers)
-            {
-                ply.connectColor = Color.White;
-            }
-
             window.Draw(background);
-
-            HandleMessages();
-
+			
             Text _chatCompose = new Text(clientPlayer.textCapture, font);
             float chatScale = .4f;
             _chatCompose.Scale = new Vector2f(chatScale, chatScale);
@@ -142,7 +147,6 @@ namespace Jaunt
             _playersConnectedText.Position = new Vector2f(-300, -220);// clientPlayer.position;
 
             drawPlayers();
-            updatePlayers();
 
 
             window.SetView(window.DefaultView);
@@ -166,9 +170,10 @@ namespace Jaunt
 
             for (int i = 0; i < chatMessages.Count; i++)
             {
+				Font font = content.Font ("font1.ttf");
                 Text chatMessage = new Text(chatMessages[i], font);
                 chatMessage.Scale = new Vector2f(chatScale, chatScale);
-                chatMessage.Position = new Vector2f(-300, -200 + (i * 10));// clientPlayer.position;
+                chatMessage.Position = new Vector2f(-300, -200 + (i * 10));
 
                 window.Draw(chatMessage);
             }
