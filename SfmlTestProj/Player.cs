@@ -1,12 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using SFML;
+using Lidgren.Network;
+using SFML.Audio;
 using SFML.Graphics;
 using SFML.Window;
-using SFML.Audio;
-using Lidgren.Network;
 
 namespace Jaunt
 {
@@ -40,7 +37,6 @@ namespace Jaunt
 
         public string textCapture = "";
 
-        //public TextWriter textCapture = new TextWriter();
         public string username = "";
 
         public string overheadMessage = "";
@@ -64,7 +60,6 @@ namespace Jaunt
             previousTime = DateTime.Now;
 
             sprite = Game.playerWalk;
-
         }
 
         public void sendPos()

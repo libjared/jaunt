@@ -24,8 +24,8 @@ namespace Jaunt
         public static float ping;
 
         public static NetClient client;
-        public static List<Player> connectedPlayers = new List<Player>() { }; //List for the connected players
-        public static List<String> chatMessages = new List<String>() { };
+        public static List<Player> connectedPlayers = new List<Player>(); //List for the connected players
+        public static List<String> chatMessages = new List<String>();
         public static Player clientPlayer;// = new Player(100, 100, -1); //Create the client's player
         public static Sprite background, playerWalk, playerIdle;
         public static Texture backgroundTexture;
