@@ -16,6 +16,7 @@ namespace Jaunt
         {
             Sprite newSprite;
             newSprite = sprite;
+            newSprite.Texture.Smooth = false;
             sprite.Scale = new Vector2f(-facing, 1);
             sprite.Origin = origin;
             sprite.Position = position;

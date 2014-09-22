@@ -24,9 +24,13 @@ namespace Jaunt
 
         public string animType = ""; //move, idle, air
 
-        public int facing = 1;
+        public int facingX = 1;
+        public int facingY = 1;
+
         public bool onGround = false;
         public int groundTimer = 0;
+
+        public int speed = 1;
 
         public long UID;
 
@@ -59,7 +63,7 @@ namespace Jaunt
             color = new Color((byte)Game.r.Next(255), (byte)Game.r.Next(255), (byte)Game.r.Next(255));
             previousTime = DateTime.Now;
 
-            sprite = Game.playerWalk;
+            sprite = Game.tempIdleS;
         }
 
         public void sendPos()
@@ -187,37 +191,122 @@ namespace Jaunt
 
         public void moveClient() //Client Player Only
         {
-            bool moveX = true;
-            bool moveY = true;
-
-            Vector2f xCheck = new Vector2f(position.X + velocity.X, position.Y + Game.playerWalk.Texture.Size.Y);
-            Vector2f yCheck = new Vector2f(position.X, position.Y + Game.playerWalk.Texture.Size.Y + velocity.Y);
-
-            if (Game.map.GetPixel((uint)xCheck.X, (uint)xCheck.Y).Equals(Color.Black))
+            if (Keyboard.IsKeyPressed(Keyboard.Key.LShift))
             {
-                moveX = false;
+                if (Keyboard.IsKeyPressed(Keyboard.Key.Left))
+                {
+                    position.X -= 2;
+                }
+                if (Keyboard.IsKeyPressed(Keyboard.Key.Right))
+                {
+                    position.X += 2;
+                }
+                if (Keyboard.IsKeyPressed(Keyboard.Key.Up))
+                {
+                    position.Y -= 2;
+                }
+                if (Keyboard.IsKeyPressed(Keyboard.Key.Down))
+                {
+                    position.Y += 2;
+                }
             }
-            if (Game.map.GetPixel((uint)yCheck.X, (uint)yCheck.Y).Equals(Color.Black))
+            //bool moveX = true;
+            //bool moveY = true;
+            RectangleShape COL = new RectangleShape(new Vector2f(15, 6));
+            COL.Position = position + new Vector2f(-Game.tempIdleS.Texture.Size.X / 2, Game.tempIdleS.Texture.Size.Y - COL.Size.Y);
+            COL.FillColor = Color.Red;
+
+            //Game.window.Draw(COL); //Draw Collision Box on Screen
+            //left side
+            if (Keyboard.IsKeyPressed(Keyboard.Key.Left))
             {
-                moveY = false;
+                bool ml = true; //"move left"
+                for (int i = 0; i < COL.Size.Y - 1; i++)
+                {
+                    if (Game.map.GetPixel((uint)(COL.Position.X  - (speed + 1)), (uint)(COL.Position.Y + i)).Equals(Color.Black))
+                    {
+                        ml = false;
+                        break;
+                    }
+                }
+                if (ml)
+                {
+                    position.X -= speed;
+                }
             }
 
-            //RectangleShape rect = new RectangleShape(new Vector2f(1, 1));
+            //right side
+            if (Keyboard.IsKeyPressed(Keyboard.Key.Right))
+            {
+                bool mr = true;
+                for (int i = 0; i < COL.Size.Y; i++)
+                {
+                    if (Game.map.GetPixel((uint)(COL.Position.X + COL.Size.X  + (speed)), (uint)(COL.Position.Y + i)).Equals(Color.Black))
+                    {
+                        mr = false;
+                        break;
+                    }
+                }
+                if (mr)
+                {
+                    position.X += speed;
+                }
+            }
+
+            //top side
+            if (Keyboard.IsKeyPressed(Keyboard.Key.Up))
+            {
+                bool mu = true;
+                for (int i = 0; i < COL.Size.X - 1; i++)
+                {
+                    if (Game.map.GetPixel((uint)(COL.Position.X + i), (uint)(COL.Position.Y - (speed))).Equals(Color.Black))
+                    {
+                        mu = false;
+                        break;
+                    }
+                }
+                if (mu)
+                {
+                    position.Y -= speed;
+                }
+            }
+
+            //bottom side
+            if (Keyboard.IsKeyPressed(Keyboard.Key.Down))
+            {
+                bool mb = true;
+                for (int i = 0; i < COL.Size.X; i++)
+                {
+                    if (Game.map.GetPixel((uint)(COL.Position.X  + i), (uint)(COL.Position.Y + COL.Size.Y + (speed))).Equals(Color.Black))
+                    {
+                        mb = false;
+                        break;
+                    }
+                }
+                if (mb)
+                {
+                    position.Y += speed;
+                }
+            }
+
+            //RectangleShape rect = new RectangleShape();
             //rect.FillColor = Color.Red;
-            //rect.Position = new Vector2f(xCheck.X, yCheck.Y);
-            //    Game.window.Draw(rect);
+            //rect.Position = position;
+            //rect.Size = new Vector2f(1, 1);
+            //Game.window.Draw(rect);
 
-            if (moveX)
-            {
-                currentMaxFrames = moveFrames;
-                position.X += velocity.X;
-            }
-            if (moveY)
-            {
-                currentMaxFrames = moveFrames;
-                position.Y += velocity.Y;
-            }
-            velocity = new Vector2f(0, 0);
+            //if (moveX)
+            //{
+            //    currentMaxFrames = moveFrames;
+            //    position.X += velocity.X;
+            //}
+            //if (moveY)
+            //{
+            //    currentMaxFrames = moveFrames;
+            //    position.Y += velocity.Y;
+            //}
+
+             //velocity = new Vector2f(0, 0); //Has the effect of just moving by "speed" time you move
 
 
         }
@@ -239,19 +328,19 @@ namespace Jaunt
             {
                 if (Keyboard.IsKeyPressed(Keyboard.Key.Left))
                 {
-                    velocity.X = -2f;
+                    velocity.X = -speed;
                 }
                 if (Keyboard.IsKeyPressed(Keyboard.Key.Right))
                 {
-                    velocity.X = 2f;
+                    velocity.X = speed;
                 }
                 if (Keyboard.IsKeyPressed(Keyboard.Key.Up))
                 {
-                    velocity.Y = -2f;
+                    velocity.Y = -speed;
                 }
                 if (Keyboard.IsKeyPressed(Keyboard.Key.Down))
                 {
-                    velocity.Y = 2f;
+                    velocity.Y = speed;
                 }
             }
             else
@@ -265,12 +354,27 @@ namespace Jaunt
 
         public void drawClient()
         {
-
-
-            if (oldPosition.X > position.X)
-                facing = 1;
-            if (oldPosition.X < position.X)
-                facing = -1;
+            if (oldPosition.Y > position.Y)
+            {
+                facingY = 1;
+                sprite = Game.tempIdleN;
+            }
+            else if (oldPosition.Y < position.Y)
+            {
+                facingY = -1;
+                sprite = Game.tempIdleS;
+            }
+            else if (oldPosition.X > position.X)
+            {   
+                facingX = 1;
+                sprite = Game.tempIdleEW;
+            }
+            else if (oldPosition.X < position.X)
+            {
+                facingX = -1;
+                sprite = Game.tempIdleEW;
+            }
+            
 
             //Main.spriteBatch.Draw(Main.playerSprite, position, null, color, 0f, Vector2.Zero, 1f, facing == -1 ? SpriteEffects.None : SpriteEffects.FlipHorizontally, 0); //Draw the client's player
             //Animation.drawAnimatedSpriteNonRef(Main.moving, 4, 10, position, facing, Color.White, 1f, frame, 0f, 1);
@@ -287,7 +391,7 @@ namespace Jaunt
 
             if (alive)
             {
-                Render.drawAnimation(Game.playerWalk, this.position, Color.White, new Vector2f((int)(Game.playerWalk.Texture.Size.X / moveFrames / 2), 0), facing, moveFrames, 1, frame, 1);
+                Render.draw(sprite, this.position, Color.White, new Vector2f((int)(Game.tempIdleS.Texture.Size.X / 2), 0), facingX);
             }
             else
             {
@@ -351,10 +455,26 @@ namespace Jaunt
                 animType = "idle";
             }
 
-            if (oldPosition.X > position.X)
-                facing = 1;
-            if (oldPosition.X < position.X)
-                facing = -1;
+            if (oldPosition.Y > position.Y)
+            {
+                facingY = 1;
+                sprite = Game.tempIdleN;
+            }
+            else if (oldPosition.Y < position.Y)
+            {
+                facingY = -1;
+                sprite = Game.tempIdleS;
+            }
+            else if (oldPosition.X > position.X)
+            {
+                facingX = 1;
+                sprite = Game.tempIdleEW;
+            }
+            else if (oldPosition.X < position.X)
+            {
+                facingX = -1;
+                sprite = Game.tempIdleEW;
+            }
 
 
             if (alive)

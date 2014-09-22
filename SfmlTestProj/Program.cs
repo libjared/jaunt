@@ -27,8 +27,8 @@ namespace Jaunt
         public static List<Player> connectedPlayers = new List<Player>(); //List for the connected players
         public static List<String> chatMessages = new List<String>();
         public static Player clientPlayer;// = new Player(100, 100, -1); //Create the client's player
-        public static Sprite background, playerWalk, playerIdle;
-        public static Texture backgroundTexture;
+        public static Sprite tempIdleN, tempIdleS, tempIdleEW, background, basicLevelDec;
+        public static Texture backgroundTexture, basicLevelCol;
 
         public static SoundBuffer click, SaD, fart, crunch;
         public static bool connected = false;
@@ -68,7 +68,7 @@ namespace Jaunt
             client = new NetClient(config);
             client.Start();
             client.Connect(ip, port);
-            map = backgroundTexture.CopyToImage();
+
 
             clientPlayer = new Player(100, 100, -1); //Create the client's player
         }
@@ -85,19 +85,17 @@ namespace Jaunt
             camera2D = new View(cameraPos, new Vector2f(640, 480));
 
 
-            Texture currTex = new Texture("Content/walkAnim.png");
-            currTex.Smooth = false;
-            playerWalk = new Sprite(currTex);
 
-            currTex = new Texture("Content/walkAnim.png");
-            currTex.Smooth = false;
-            playerIdle = new Sprite(currTex);
-
-           
+            tempIdleN = new Sprite(new Texture("Content/tempIdleN.png"));
+            tempIdleS = new Sprite(new Texture("Content/tempIdleS.png"));
+            tempIdleEW = new Sprite(new Texture("Content/tempIdleEW.png"));
             background = new Sprite(new Texture("Content/background.png"));
-            
-            backgroundTexture = new Texture("Content/background.png");
+            basicLevelDec = new Sprite(new Texture("Content/basicLevel_decorMap.png"));
 
+
+            basicLevelCol = new Texture("Content/basicLevel_collisionMap.png");
+            backgroundTexture = basicLevelCol;
+            map = backgroundTexture.CopyToImage();
 
             font = new Font("Content/Font1.ttf");
 
@@ -151,14 +149,16 @@ namespace Jaunt
             UpdateSounds();
 
             window.DispatchEvents();
-            window.Clear(new Color(0, 203, 255));
+            window.Clear(Color.Black);
 
             for (int i = 0; i < connectedPlayers.Count; i++)
             {
                 connectedPlayers[i].connectColor = Color.White;
             }
 
-            window.Draw(background);
+            //window.Draw(background);
+            window.Draw(basicLevelDec);
+
 
             HandleMessages();
 
@@ -286,7 +286,7 @@ namespace Jaunt
                         //read the incoming string
                         string messageType = msg.ReadString();
 
-                        
+
                         switch (messageType)
                         {
                             case "LIFE":
