@@ -45,7 +45,7 @@ namespace Jaunt
         public Color color = Color.White;
         public int frame = 0;
 
-        public Sprite sprite = new Sprite();
+		public string sprite;
 
         public DateTime previousTime = new DateTime();
 
@@ -59,12 +59,11 @@ namespace Jaunt
             color = new Color((byte)Game.r.Next(255), (byte)Game.r.Next(255), (byte)Game.r.Next(255));
             previousTime = DateTime.Now;
 
-            sprite = Game.playerWalk;
+            sprite = "walkAnim.png";
         }
 
         public void sendPos()
         {
-
             NetOutgoingMessage outGoingMessage = Game.client.CreateMessage();
             outGoingMessage.Write("POS");
             outGoingMessage.Write(position.X);
@@ -75,7 +74,6 @@ namespace Jaunt
 
         public void sendAliveStatus()
         {
-
             NetOutgoingMessage outGoingMessage = Game.client.CreateMessage();
             outGoingMessage.Write("LIFE");
             outGoingMessage.Write(alive);
@@ -90,7 +88,6 @@ namespace Jaunt
             outGoingMessage.Write("CHAT");
             outGoingMessage.Write(textCapture);
             Game.chatMessages.Add("You: " + textCapture);
-            //SoundPlayer.playSound(Game.click);
             Game.soundInstances.Add(new SoundInstance(Game.click, 0f, 0f));
             if (Game.chatMessages.Count > 15)
                 Game.chatMessages.RemoveAt(0);
@@ -116,6 +113,9 @@ namespace Jaunt
             {
                 alive = false;
                 sendAliveStatus();
+				//var snd = new Sound (Game.content.SoundBuffer("fart.wav"));
+				//snd.
+
                 Game.soundInstances.Add(new SoundInstance(Game.fart, 0f, 0f));
                 Game.soundInstances.Add(new SoundInstance(Game.SaD, 0f, 0f));
             }

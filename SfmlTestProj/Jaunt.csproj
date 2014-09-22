@@ -89,6 +89,8 @@
     <Compile Include="Render.cs" />
     <Compile Include="Content.cs" />
     <Compile Include="Extensions.cs" />
+    <Compile Include="InternalGame.cs" />
+    <Compile Include="SoundPlayer.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Content\background.png">

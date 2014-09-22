@@ -14,8 +14,6 @@ namespace Jaunt
     static class Game
     {
         public static RenderWindow window;
-		public static DateTime startTime;
-		//public static DateTime previousTime; //TODO remove??
         public static Vector2f windowSize;
         public static Random r = new Random();
         public static List<SoundInstance> soundInstances = new List<SoundInstance>();
@@ -27,9 +25,6 @@ namespace Jaunt
         public static List<Player> connectedPlayers = new List<Player>();
         public static List<String> chatMessages = new List<String>();
         public static Player clientPlayer;
-        //public static Sprite background, playerWalk, playerIdle;
-
-        //public static bool connected = false; //TODO: client has def for this
 
         public static int timer = 0;
 
@@ -43,15 +38,13 @@ namespace Jaunt
             {
                 UpdateDraw();
             }
-
         }
 
 		private static void SetupClient ()
 		{
 			NetPeerConfiguration config = new NetPeerConfiguration ("jaunt");
 			config.EnableMessageType (NetIncomingMessageType.ConnectionLatencyUpdated);
-			string ip = "giga.krash.net";
-			//Jared's IP
+			string ip = "giga.krash.net"; //Jared's IP
 			int port = 12345;
 			client = new NetClient (config);
 			client.Start ();
@@ -60,9 +53,6 @@ namespace Jaunt
 
 		private static void LoadContentInitialize()
         {
-			startTime = DateTime.Now;
-			//previousTime = DateTime.Now; //TODO remove??
-
             window = new RenderWindow(
                 new VideoMode(800, 600), "Project Title");
 
@@ -123,42 +113,52 @@ namespace Jaunt
 			/*
 			 * draw
 			 */
+			window.Clear(new Color(0, 203, 255));
+
 			//set the camera
 			View cameraView = new View (window.DefaultView);
 			cameraView.Center = clientPlayer.position.Floor();
 			cameraView.Zoom(0.5f);
 			window.SetView(cameraView);
-            
-            window.Clear(new Color(0, 203, 255));
 
-            window.Draw(background);
-			
-            Text _chatCompose = new Text(clientPlayer.textCapture, font);
-            float chatScale = .4f;
-            _chatCompose.Scale = new Vector2f(chatScale, chatScale);
-            _chatCompose.Position = new Vector2f(-300, 200);// clientPlayer.position;
+			//world stuff
+            window.Draw(content.Texture("background.png"));
+			drawPlayers();
 
-            Text _textConnected = new Text(connected ? "CONNECTED" : "DISCONNECTED", font);
-            _textConnected.Scale = new Vector2f(chatScale, chatScale);
-            _textConnected.Position = new Vector2f(-300, -230);// clientPlayer.position;
+			//hud stuff
+			window.SetView(window.DefaultView);
+			var allFont = content.Font ("font1.ttf");
+			Vector2f defaultScale = new Vector2f(0.4f, 0.4f);
 
-            Text _playersConnectedText = new Text(connectedPlayers.Count + " Player Connected", font);
-            _playersConnectedText.Scale = new Vector2f(chatScale, chatScale);
-            _playersConnectedText.Position = new Vector2f(-300, -220);// clientPlayer.position;
+			Text _chatCompose = new Text () {
+				DisplayedString = clientPlayer.textCapture,
+				Font = allFont,
+				Scale = defaultScale,
+				Position = new Vector2f(-300, 200),
+			};
+			window.Draw(_chatCompose);
 
-            drawPlayers();
+			Text _textConnected = new Text () {
+				DisplayedString = Enum.GetName(typeof(NetConnectionStatus), client.ConnectionStatus),
+				Font = content.Font ("font1.ttf"),
+				Scale = defaultScale,
+				Position = new Vector2f(-300, -230),
+			};
+			window.Draw(_textConnected);
 
-
-            window.SetView(window.DefaultView);
-            window.Draw(_chatCompose);
-            window.Draw(_textConnected);
-            window.Draw(_playersConnectedText);
-
+            Text _playersConnectedText = new Text()
+			{
+				DisplayedString = connectedPlayers.Count + " Players Connected",
+				Font = content.Font("font1.ttf"),
+				Scale = defaultScale,
+				Position = new Vector2f(-300, -220),
+			};
+			window.Draw(_playersConnectedText);
+           	
             Color pingColor = Color.White;
 
             if (ping == 0)
             {
-                //connected = false;
                 pingColor = Color.Red;
             }
             if (ping > 100)
